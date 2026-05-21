@@ -4,18 +4,20 @@ import (
 	"context"
 	"errors"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"net"
-
 	"github.com/routex/routex/internal/api"
+	"github.com/routex/routex/internal/auth"
 	"github.com/routex/routex/internal/config"
 	"github.com/routex/routex/internal/db"
 	"github.com/routex/routex/internal/logger"
+	"github.com/routex/routex/internal/scheduler"
+	"github.com/routex/routex/internal/service"
 	"github.com/routex/routex/internal/xray"
 )
 
@@ -36,6 +38,11 @@ func main() {
 		zlog.Sugar().Fatalf("automigrate: %v", err)
 	}
 
+	// 首启时无 admin 则自动创建（密码随机，打到日志）
+	if err := auth.EnsureDefaultAdmin(gormDB, zlog); err != nil {
+		zlog.Sugar().Fatalf("bootstrap admin: %v", err)
+	}
+
 	xrayClient, err := xray.New(
 		net.JoinHostPort(cfg.XrayAPIHost, cfg.XrayAPIPort),
 		cfg.XrayInboundTag,
@@ -45,7 +52,24 @@ func main() {
 	}
 	defer xrayClient.Close()
 
-	router := api.NewRouter(cfg, zlog, gormDB, xrayClient)
+	// service 层
+	userSvc := service.NewUserService(gormDB, xrayClient)
+	adminSvc := service.NewAdminService(gormDB, cfg.JWTSecret)
+
+	// 后台调度：流量轮询
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	collector := scheduler.NewTrafficCollector(gormDB, xrayClient, userSvc, zlog, cfg.TrafficPollInterval)
+	go collector.Run(ctx)
+
+	// HTTP 路由
+	router := api.NewRouter(api.Deps{
+		Cfg:    cfg,
+		Log:    zlog,
+		XC:     xrayClient,
+		Users:  userSvc,
+		Admins: adminSvc,
+	})
 
 	srv := &http.Server{
 		Addr:              ":" + cfg.AppPort,
@@ -65,9 +89,10 @@ func main() {
 	<-quit
 	zlog.Info("shutting down")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
+	cancel() // 通知 scheduler 退出
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer shutdownCancel()
+	if err := srv.Shutdown(shutdownCtx); err != nil {
 		zlog.Sugar().Errorf("shutdown: %v", err)
 	}
 }

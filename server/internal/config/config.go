@@ -2,6 +2,8 @@ package config
 
 import (
 	"os"
+	"strconv"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -21,9 +23,11 @@ type Config struct {
 	RedisPort     string
 	RedisPassword string
 
-	XrayAPIHost     string
-	XrayAPIPort     string
-	XrayInboundTag  string
+	XrayAPIHost    string
+	XrayAPIPort    string
+	XrayInboundTag string
+
+	TrafficPollInterval time.Duration
 }
 
 func Load() (*Config, error) {
@@ -49,7 +53,18 @@ func Load() (*Config, error) {
 		XrayAPIHost:    getenv("XRAY_API_HOST", "127.0.0.1"),
 		XrayAPIPort:    getenv("XRAY_API_PORT", "10085"),
 		XrayInboundTag: getenv("XRAY_INBOUND_TAG", "vless-in"),
+
+		TrafficPollInterval: time.Duration(getenvInt("TRAFFIC_POLL_SECONDS", 60)) * time.Second,
 	}, nil
+}
+
+func getenvInt(key string, def int) int {
+	if v := os.Getenv(key); v != "" {
+		if n, err := strconv.Atoi(v); err == nil {
+			return n
+		}
+	}
+	return def
 }
 
 func getenv(key, def string) string {
