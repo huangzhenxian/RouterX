@@ -1,0 +1,63 @@
+# ===== Secrets / env =====
+.env
+.env.local
+.env.*.local
+*.local
+# 真实凭证文件请用 .example 后缀提交模板，实文件加到这里
+secrets/
+
+# ===== Go =====
+/server/bin/
+/server/tmp/
+/server/__debug_bin*
+*.test
+*.out
+*.exe
+coverage.out
+coverage.html
+
+# air (Go 热重载) 产物
+tmp/
+build-errors.log
+
+# ===== Node / Vite / React =====
+node_modules/
+dist/
+build/
+.vite/
+.turbo/
+.cache/
+*.tsbuildinfo
+.eslintcache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===== IDE / editors =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.history/
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+ehthumbs.db
+._*
+
+# ===== Logs / runtime =====
+logs/
+*.log
+.pids/
+
+# ===== Docker / data volumes =====
+data/
+postgres_data/
+redis_data/
+
+# ===== 提醒 =====
+# deploy/xray/config.json 含 Reality privateKey，请勿把真实密钥提交到仓库。
+# 推荐做法：本地改名为 config.local.json 并把 config.json 当成模板维护。
