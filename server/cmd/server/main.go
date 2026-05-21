@@ -10,10 +10,13 @@ import (
 	"syscall"
 	"time"
 
+	"net"
+
 	"github.com/routex/routex/internal/api"
 	"github.com/routex/routex/internal/config"
 	"github.com/routex/routex/internal/db"
 	"github.com/routex/routex/internal/logger"
+	"github.com/routex/routex/internal/xray"
 )
 
 func main() {
@@ -33,7 +36,16 @@ func main() {
 		zlog.Sugar().Fatalf("automigrate: %v", err)
 	}
 
-	router := api.NewRouter(cfg, zlog, gormDB)
+	xrayClient, err := xray.New(
+		net.JoinHostPort(cfg.XrayAPIHost, cfg.XrayAPIPort),
+		cfg.XrayInboundTag,
+	)
+	if err != nil {
+		zlog.Sugar().Fatalf("xray client: %v", err)
+	}
+	defer xrayClient.Close()
+
+	router := api.NewRouter(cfg, zlog, gormDB, xrayClient)
 
 	srv := &http.Server{
 		Addr:              ":" + cfg.AppPort,
