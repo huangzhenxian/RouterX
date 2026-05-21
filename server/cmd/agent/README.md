@@ -20,14 +20,14 @@ docker build -f cmd/agent/Dockerfile -t routex-agent:latest .
 
 | 变量 | 必填 | 说明 |
 |---|---|---|
-| `ROUTEX_API_URL` | 是 | 控制平面地址，如 `http://control.example.com:8080` |
+| `ROUTEX_API_URL` | 是 | 控制平面地址，如 `http://control.example.com:8891`（本地开发 `http://localhost:8891`） |
 | `ROUTEX_NODE_TOKEN` | 是 | 控制台 `POST /v1/nodes` 创建节点时一次性返回的 token |
 | `ROUTEX_HEARTBEAT_INTERVAL` | 否 | 心跳间隔，默认 `30s` |
 
 ## 运行
 
 ```bash
-ROUTEX_API_URL=http://1.2.3.4:8080 \
+ROUTEX_API_URL=http://1.2.3.4:8891 \
 ROUTEX_NODE_TOKEN=xxxxx \
 ./bin/agent
 ```
@@ -40,7 +40,7 @@ Description=RouteX Node Agent
 After=network.target
 
 [Service]
-Environment=ROUTEX_API_URL=http://1.2.3.4:8080
+Environment=ROUTEX_API_URL=http://1.2.3.4:8891
 Environment=ROUTEX_NODE_TOKEN=xxxxx
 ExecStart=/usr/local/bin/agent
 Restart=always

@@ -46,8 +46,8 @@ kill_pidfile "Go 后端"   .pids/server.pid
 kill_pidfile "React 前端" .pids/web.pid
 kill_pidfile "docker 日志" .pids/docker-logs.pid
 
-kill_by_port 8080 "Go 后端"
-kill_by_port 5173 "React 前端"
+kill_by_port 8891 "Go 后端"
+kill_by_port 8890 "React 前端"
 
 echo "==> 停止 docker 服务"
 docker compose down

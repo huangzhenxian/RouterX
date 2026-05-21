@@ -74,8 +74,8 @@ sleep 1
 cat <<EOF
 
 ✓ 服务已启动
-  - 后端:  http://localhost:8080/v1/health   (pid $SERVER_PID, 日志 logs/server.log)
-  - 前端:  http://localhost:5173             (pid $WEB_PID,    日志 logs/web.log)
+  - 后端:  http://localhost:8891/v1/health   (pid $SERVER_PID, 日志 logs/server.log)
+  - 前端:  http://localhost:8890             (pid $WEB_PID,    日志 logs/web.log)
   - Docker:                                  (pid $DOCKER_LOG_PID, 日志 logs/docker.log)
 
 ==> 实时日志（Ctrl+C 仅退出日志窗口，服务不停；./stop.sh 才会停服务）

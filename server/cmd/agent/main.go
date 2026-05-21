@@ -5,7 +5,7 @@
 //
 // Usage (env-driven, no flags):
 //
-//	ROUTEX_API_URL=http://control.example.com:8080 \
+//	ROUTEX_API_URL=http://control.example.com:8891 \
 //	ROUTEX_NODE_TOKEN=<token-from-/v1/nodes-create> \
 //	ROUTEX_HEARTBEAT_INTERVAL=30s   # optional, default 30s
 //	./bin/agent

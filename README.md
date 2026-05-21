@@ -27,8 +27,9 @@ RouteX/
 - `Ctrl+C` 只退出日志窗口，**服务继续在后台运行**
 - 想真的停服务，运行 `./stop.sh`
 - 服务地址：
-  - 后端 `http://localhost:8080/v1/health`
-  - 前端 `http://localhost:5173`
+  - 前端 `http://localhost:8890`（浏览器入口）
+  - 后端 `http://localhost:8891/v1/health`
+- 其它端口：PostgreSQL `8892`，Redis `8893`，Xray API `8894`，Xray 入站 `8895`，sing-box API `8896`
 - 日志文件：`logs/docker.log`、`logs/server.log`、`logs/web.log`
 - 首次启动会自动 `cp .env.example .env` 并 `npm install`
 

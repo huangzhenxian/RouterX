@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-routex}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-routex_dev_pwd}
     ports:
-      - "5432:5432"
+      - "8892:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./migrations:/docker-entrypoint-initdb.d:ro
@@ -23,7 +23,7 @@ services:
     container_name: routex-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "8893:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -37,8 +37,8 @@ services:
     container_name: routex-xray
     restart: unless-stopped
     ports:
-      - "10085:10085"   # Xray gRPC API
-      - "443:443"       # VLESS + Reality (示例)
+      - "8894:10085"    # Xray gRPC API
+      - "8895:443"      # VLESS + Reality 入站（生产可改成 443:443）
     volumes:
       - ./deploy/xray/config.json:/etc/xray/config.json:ro
       - xray_logs:/var/log/xray
@@ -49,13 +49,10 @@ services:
     container_name: routex-singbox
     restart: unless-stopped
     ports:
-      - "9090:9090"     # Clash API / sing-box API
+      - "8896:9090"     # Clash API / sing-box API
     volumes:
       - ./deploy/sing-box/config.json:/etc/sing-box/config.json:ro
     command: ["run", "-c", "/etc/sing-box/config.json"]
-
-  # 后端和前端先不放进 compose，本地开发用 go run / npm run dev 更顺手
-  # 真正部署前再补一个 server/Dockerfile 和 web/Dockerfile
 
 volumes:
   postgres_data:
