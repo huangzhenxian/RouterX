@@ -20,6 +20,9 @@ done
 if [ ! -f .env ]; then
   echo "==> .env 不存在，从 .env.example 拷贝"
   cp .env.example .env
+else
+  # 已有 .env：检测与 .env.example 的漂移（缺 key / 端口不一致）
+  ./scripts/check-env.sh
 fi
 
 # ---------- 防重复启动 ----------
