@@ -56,11 +56,15 @@ func main() {
 	userSvc := service.NewUserService(gormDB, xrayClient)
 	adminSvc := service.NewAdminService(gormDB, cfg.JWTSecret)
 
-	// 后台调度：流量轮询
+	// 后台调度：流量轮询 + Xray 健康/自愈
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	collector := scheduler.NewTrafficCollector(gormDB, xrayClient, userSvc, zlog, cfg.TrafficPollInterval)
 	go collector.Run(ctx)
+
+	watcher := scheduler.NewXrayWatcher(xrayClient, userSvc, zlog, 15*time.Second)
+	watcher.SyncNow(ctx) // 启动时立刻同步一次
+	go watcher.Run(ctx)
 
 	// HTTP 路由
 	router := api.NewRouter(api.Deps{
