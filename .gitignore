@@ -29,6 +29,9 @@ build/
 .cache/
 *.tsbuildinfo
 .eslintcache
+# tsc -b 在配置文件旁产出的 .js / .d.ts 编译产物，不需要进仓库
+web/vite.config.js
+web/vite.config.d.ts
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
