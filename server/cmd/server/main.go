@@ -55,6 +55,7 @@ func main() {
 	// service 层
 	userSvc := service.NewUserService(gormDB, xrayClient)
 	adminSvc := service.NewAdminService(gormDB, cfg.JWTSecret)
+	nodeSvc := service.NewNodeService(gormDB)
 
 	// 后台调度：流量轮询 + Xray 健康/自愈
 	ctx, cancel := context.WithCancel(context.Background())
@@ -73,6 +74,7 @@ func main() {
 		XC:     xrayClient,
 		Users:  userSvc,
 		Admins: adminSvc,
+		Nodes:  nodeSvc,
 	})
 
 	srv := &http.Server{

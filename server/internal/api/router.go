@@ -10,13 +10,13 @@ import (
 	"go.uber.org/zap"
 )
 
-// Deps 路由层依赖的服务集合。比把零散参数串到 NewRouter 里清爽。
 type Deps struct {
 	Cfg    *config.Config
 	Log    *zap.Logger
 	XC     *xray.Client
 	Users  *service.UserService
 	Admins *service.AdminService
+	Nodes  *service.NodeService
 }
 
 func NewRouter(d Deps) *gin.Engine {
@@ -29,7 +29,7 @@ func NewRouter(d Deps) *gin.Engine {
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5173"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "X-Node-Token"},
 		AllowCredentials: true,
 	}))
 
@@ -37,24 +37,33 @@ func NewRouter(d Deps) *gin.Engine {
 	{
 		v1.GET("/health", Health)
 
-		// 公开接口：登录
-		adminAPI := newAdminAPI(d.Admins)
-		v1.POST("/admin/login", adminAPI.Login)
+		// 公开：管理员登录
+		v1.POST("/admin/login", newAdminAPI(d.Admins).Login)
 
-		// 受保护：JWT 鉴权
-		auth := v1.Group("")
-		auth.Use(middleware.JWTAuth(d.Cfg.JWTSecret))
+		// 节点 agent 心跳：用 X-Node-Token 鉴权，不走 JWT
+		nodeAPI := newNodeAPI(d.Nodes)
+		nodeAuthed := v1.Group("")
+		nodeAuthed.Use(middleware.NodeAuth(d.Nodes))
+		nodeAuthed.POST("/nodes/heartbeat", nodeAPI.Heartbeat)
+
+		// 后台管理：JWT 鉴权
+		authed := v1.Group("")
+		authed.Use(middleware.JWTAuth(d.Cfg.JWTSecret))
 		{
-			userAPI := newUserAPI(d.Users)
-			auth.POST("/users", userAPI.Create)
-			auth.GET("/users", userAPI.List)
-			auth.GET("/users/:id", userAPI.Get)
-			auth.DELETE("/users/:id", userAPI.Delete)
-			auth.POST("/users/:id/enable", userAPI.Enable)
-			auth.POST("/users/:id/disable", userAPI.Disable)
+			u := newUserAPI(d.Users)
+			authed.POST("/users", u.Create)
+			authed.GET("/users", u.List)
+			authed.GET("/users/:id", u.Get)
+			authed.DELETE("/users/:id", u.Delete)
+			authed.POST("/users/:id/enable", u.Enable)
+			authed.POST("/users/:id/disable", u.Disable)
+
+			authed.POST("/nodes", nodeAPI.Create)
+			authed.GET("/nodes", nodeAPI.List)
+			authed.GET("/nodes/:id", nodeAPI.Get)
+			authed.DELETE("/nodes/:id", nodeAPI.Delete)
 		}
 
-		// dev 环境的 Xray 联通调试接口，无鉴权
 		if d.Cfg.AppEnv != "prod" {
 			dbg := newDebugXray(d.XC)
 			grp := v1.Group("/_debug/xray")
