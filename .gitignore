@@ -51,8 +51,13 @@ Thumbs.db
 ehthumbs.db
 ._*
 
-# IDE/clipboard 临时截图（VSCode / 系统粘贴产生的 UUID 命名 png）
-/[0-9a-f]*-[0-9a-f]*-[0-9a-f]*-[0-9a-f]*-[0-9a-f]*.png
+# IDE/clipboard 临时截图（VSCode / 系统粘贴产生的图片）
+# 严格只忽略仓库根目录的图片；子目录里如果有正经资源不受影响。
+/*.png
+/*.jpg
+/*.jpeg
+/*.gif
+/*.webp
 
 # ===== Logs / runtime =====
 logs/
