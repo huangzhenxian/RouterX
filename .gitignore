@@ -7,6 +7,7 @@
 secrets/
 
 # ===== Go =====
+/bin/
 /server/bin/
 /server/tmp/
 /server/__debug_bin*
