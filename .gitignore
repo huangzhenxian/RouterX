@@ -51,6 +51,9 @@ Thumbs.db
 ehthumbs.db
 ._*
 
+# IDE/clipboard 临时截图（VSCode / 系统粘贴产生的 UUID 命名 png）
+/[0-9a-f]*-[0-9a-f]*-[0-9a-f]*-[0-9a-f]*-[0-9a-f]*.png
+
 # ===== Logs / runtime =====
 logs/
 *.log
