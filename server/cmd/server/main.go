@@ -57,6 +57,7 @@ func main() {
 	adminSvc := service.NewAdminService(gormDB, cfg.JWTSecret)
 	nodeSvc := service.NewNodeService(gormDB)
 	subSvc := service.NewSubscriptionService(gormDB, cfg)
+	providerSvc := service.NewProviderService(gormDB)
 
 	// 后台调度：流量轮询 + Xray 健康/自愈
 	ctx, cancel := context.WithCancel(context.Background())
@@ -68,15 +69,19 @@ func main() {
 	watcher.SyncNow(ctx) // 启动时立刻同步一次
 	go watcher.Run(ctx)
 
+	providerChecker := scheduler.NewProviderHealthChecker(providerSvc, zlog, cfg.ProviderHealthInterval)
+	go providerChecker.Run(ctx)
+
 	// HTTP 路由
 	router := api.NewRouter(api.Deps{
-		Cfg:    cfg,
-		Log:    zlog,
-		XC:     xrayClient,
-		Users:  userSvc,
-		Admins: adminSvc,
-		Nodes:  nodeSvc,
-		Subs:   subSvc,
+		Cfg:       cfg,
+		Log:       zlog,
+		XC:        xrayClient,
+		Users:     userSvc,
+		Admins:    adminSvc,
+		Nodes:     nodeSvc,
+		Subs:      subSvc,
+		Providers: providerSvc,
 	})
 
 	srv := &http.Server{

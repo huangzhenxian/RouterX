@@ -12,6 +12,7 @@ require (
 	github.com/xtls/xray-core v1.260327.0
 	go.uber.org/zap v1.28.0
 	golang.org/x/crypto v0.49.0
+	golang.org/x/net v0.52.0
 	google.golang.org/grpc v1.81.1
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.31.1
@@ -67,7 +68,6 @@ require (
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/arch v0.23.0 // indirect
 	golang.org/x/mod v0.33.0 // indirect
-	golang.org/x/net v0.52.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.42.0 // indirect
 	golang.org/x/text v0.35.0 // indirect

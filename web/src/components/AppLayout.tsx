@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users as UsersIcon, Server, LogOut, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { LayoutDashboard, Users as UsersIcon, Server, Network, LogOut, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuthStore } from '@/stores/auth';
@@ -17,6 +17,7 @@ const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: '概览' },
   { to: '/users',     icon: UsersIcon,       label: '用户' },
   { to: '/nodes',     icon: Server,          label: '节点' },
+  { to: '/providers', icon: Network,         label: '出口代理' },
 ];
 
 export function AppLayout() {

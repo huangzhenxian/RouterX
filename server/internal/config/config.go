@@ -36,7 +36,8 @@ type Config struct {
 	RealitySNI       string
 	RealityShortID   string
 
-	TrafficPollInterval time.Duration
+	TrafficPollInterval    time.Duration
+	ProviderHealthInterval time.Duration
 }
 
 func Load() (*Config, error) {
@@ -69,7 +70,8 @@ func Load() (*Config, error) {
 		RealitySNI:       getenv("REALITY_SNI", "www.cloudflare.com"),
 		RealityShortID:   getenv("REALITY_SHORT_ID", ""),
 
-		TrafficPollInterval: time.Duration(getenvInt("TRAFFIC_POLL_SECONDS", 60)) * time.Second,
+		TrafficPollInterval:    time.Duration(getenvInt("TRAFFIC_POLL_SECONDS", 60)) * time.Second,
+		ProviderHealthInterval: time.Duration(getenvInt("PROVIDER_HEALTH_SECONDS", 120)) * time.Second,
 	}, nil
 }
 
