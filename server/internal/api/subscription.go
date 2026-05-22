@@ -19,8 +19,11 @@ func newSubAPI(subs *service.SubscriptionService, users *service.UserService) *s
 	return &subAPI{subs: subs, users: users}
 }
 
-// Public 订阅入口：客户端用 token 拉取 base64 编码的订阅，无需 JWT。
-// token 本身就是凭证；要失效旧链接管理员可重新生成。
+// Public 订阅入口：token 本身就是凭证，无需 JWT。
+//
+// 内容协商：
+//   - 浏览器（Accept: text/html）→ 渲染友好页面，显示二维码、客户端下载、复制按钮
+//   - 代理客户端（Accept: */* 或 text/plain）→ 返回 base64 编码的 vless 链接列表
 func (h *subAPI) Public(c *gin.Context) {
 	token := c.Param("token")
 	user, err := h.subs.FindByToken(c.Request.Context(), token)
@@ -41,6 +44,17 @@ func (h *subAPI) Public(c *gin.Context) {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
+
+	if wantsHTML(c) {
+		scheme := "http"
+		if c.Request.TLS != nil {
+			scheme = "https"
+		}
+		subURL := scheme + "://" + c.Request.Host + "/v1/sub/" + token
+		h.renderSubHTML(c, payload, subURL)
+		return
+	}
+
 	// 主流代理客户端识别 base64-encoded text/plain 订阅
 	c.Header("Content-Type", "text/plain; charset=utf-8")
 	c.Header("Profile-Update-Interval", "24")

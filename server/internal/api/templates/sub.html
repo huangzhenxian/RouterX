@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>RouteX 订阅 · {{.Username}}</title>
+<style>
+  :root {
+    --bg: #fafafa;
+    --card: #ffffff;
+    --fg: #0a0a0a;
+    --muted: #71717a;
+    --border: #e4e4e7;
+    --primary: #18181b;
+    --primary-fg: #fafafa;
+    --accent: #f4f4f5;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 24px 20px 48px; }
+  header { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+  header .logo { width: 28px; height: 28px; border-radius: 6px; background: var(--primary); }
+  header .name { font-weight: 600; font-size: 18px; }
+  header .meta { color: var(--muted); font-size: 13px; margin-left: auto; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card h2 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+  .card p.hint { margin: 0 0 16px; color: var(--muted); font-size: 13px; }
+
+  .qr-row { display: flex; gap: 20px; align-items: center; }
+  .qr-box {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    flex-shrink: 0;
+  }
+  .qr-box canvas, .qr-box img { display: block; }
+  .qr-info { min-width: 0; flex: 1; }
+
+  .url-line {
+    display: flex;
+    gap: 8px;
+    background: var(--accent);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12px;
+    word-break: break-all;
+    overflow-wrap: break-word;
+    margin-top: 8px;
+  }
+  .url-line .text { flex: 1; min-width: 0; }
+
+  button {
+    appearance: none;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--fg);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s;
+  }
+  button:hover { background: var(--accent); }
+  button.primary {
+    background: var(--primary);
+    color: var(--primary-fg);
+    border-color: var(--primary);
+  }
+  button.primary:hover { opacity: .9; }
+
+  .node-link {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+  .node-link:last-child { margin-bottom: 0; }
+  .node-link .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .node-link .head .name { font-weight: 500; font-size: 14px; }
+  .node-link .head .addr { color: var(--muted); font-size: 12px; font-family: ui-monospace, monospace; margin-left: 8px; }
+  .node-link pre {
+    margin: 0;
+    font-size: 11px;
+    color: var(--muted);
+    font-family: ui-monospace, monospace;
+    word-break: break-all;
+    white-space: pre-wrap;
+  }
+
+  .clients { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .clients a {
+    display: block;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--fg);
+    font-size: 13px;
+    transition: background .15s;
+  }
+  .clients a:hover { background: var(--accent); }
+  .clients .platform { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+  .clients .app { margin-top: 2px; font-weight: 500; }
+
+  .toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--primary);
+    color: var(--primary-fg);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity .15s, transform .15s;
+    pointer-events: none;
+    z-index: 999;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  ol.steps { margin: 8px 0 0; padding-left: 20px; }
+  ol.steps li { margin-bottom: 4px; color: var(--muted); font-size: 13px; }
+  ol.steps li strong { color: var(--fg); font-weight: 500; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo"></div>
+    <div class="name">RouteX</div>
+    <div class="meta">用户: {{.Username}}</div>
+  </header>
+
+  <div class="card">
+    <h2>导入订阅</h2>
+    <p class="hint">推荐方式：在客户端里粘贴下面这条订阅地址，或扫码自动导入</p>
+
+    <div class="qr-row">
+      <div class="qr-box"><canvas id="qr"></canvas></div>
+      <div class="qr-info">
+        <div class="url-line">
+          <span class="text" id="sub-url">{{.SubURL}}</span>
+        </div>
+        <div style="margin-top: 10px; display: flex; gap: 8px;">
+          <button class="primary" onclick="copyText('{{.SubURL}}', '订阅地址')">复制订阅地址</button>
+          <button onclick="copyText('{{.Base64}}', 'base64 订阅')">复制 base64</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>怎么导入</h2>
+    <ol class="steps">
+      <li><strong>选客户端</strong>（下方根据你的设备）</li>
+      <li>找到 <strong>"订阅"</strong> 或 <strong>"Subscribe"</strong> 菜单</li>
+      <li>粘贴上面的订阅地址 → <strong>更新</strong></li>
+      <li>选一个节点 → 打开代理</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2>客户端下载</h2>
+    <p class="hint">挑你设备对应的一个</p>
+    <div class="clients">
+      <a href="https://github.com/2dust/v2rayN/releases" target="_blank" rel="noopener">
+        <div class="platform">Windows</div><div class="app">v2rayN</div>
+      </a>
+      <a href="https://github.com/hiddify/hiddify-app/releases" target="_blank" rel="noopener">
+        <div class="platform">Win / Mac / Linux</div><div class="app">Hiddify</div>
+      </a>
+      <a href="https://github.com/clash-verge-rev/clash-verge-rev/releases" target="_blank" rel="noopener">
+        <div class="platform">macOS</div><div class="app">Clash Verge</div>
+      </a>
+      <a href="https://apps.apple.com/app/shadowrocket/id932747118" target="_blank" rel="noopener">
+        <div class="platform">iOS</div><div class="app">Shadowrocket</div>
+      </a>
+      <a href="https://apps.apple.com/app/streisand/id6450534064" target="_blank" rel="noopener">
+        <div class="platform">iOS</div><div class="app">Streisand</div>
+      </a>
+      <a href="https://github.com/2dust/v2rayNG/releases" target="_blank" rel="noopener">
+        <div class="platform">Android</div><div class="app">v2rayNG</div>
+      </a>
+      <a href="https://github.com/MetaCubeX/ClashMetaForAndroid/releases" target="_blank" rel="noopener">
+        <div class="platform">Android</div><div class="app">Clash Meta</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>原始 vless:// 链接</h2>
+    <p class="hint">不想用订阅的可以单独导入这些</p>
+    {{range .Links}}
+    <div class="node-link">
+      <div class="head">
+        <div>
+          <span class="name">{{.NodeName}}</span>
+          <span class="addr">{{.Host}}:{{.Port}}</span>
+        </div>
+        <button onclick="copyText({{.URLJSON}}, '{{.NodeName}} 链接')">复制</button>
+      </div>
+      <pre>{{.URL}}</pre>
+    </div>
+    {{end}}
+  </div>
+
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+  // 生成订阅地址二维码
+  QRCode.toCanvas(document.getElementById('qr'),
+    document.getElementById('sub-url').textContent,
+    { width: 180, margin: 1, color: { dark: '#0a0a0a', light: '#ffffff' } },
+    function (err) { if (err) console.error(err); });
+
+  function copyText(text, label) {
+    navigator.clipboard.writeText(text).then(function () {
+      showToast(label + ' 已复制');
+    }, function () {
+      showToast('复制失败');
+    });
+  }
+
+  var toastTimer = null;
+  function showToast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove('show'); }, 1800);
+  }
+</script>
+</body>
+</html>
