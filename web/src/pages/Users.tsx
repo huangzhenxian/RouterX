@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Plus, Power, PowerOff, Trash2 } from 'lucide-react';
+import { Plus, Power, PowerOff, Trash2, QrCode } from 'lucide-react';
 import { listUsers, createUser, deleteUser, enableUser, disableUser } from '@/api/users';
 import type { CreateUserInput } from '@/types/user';
 import { cn, errorMessage, formatBytes } from '@/lib/utils';
@@ -20,6 +20,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { SubscriptionDialog } from '@/components/SubscriptionDialog';
 
 export function Users() {
   const qc = useQueryClient();
@@ -32,6 +33,7 @@ export function Users() {
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<CreateUserInput>({ username: '', traffic_limit: 0 });
+  const [subFor, setSubFor] = useState<{ id: number; username: string } | null>(null);
 
   const createM = useMutation({
     mutationFn: createUser,
@@ -122,6 +124,14 @@ export function Users() {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-1">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button size="sm" variant="ghost" onClick={() => setSubFor({ id: u.id, username: u.username })}>
+                          <QrCode className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>订阅 / 二维码</TooltipContent>
+                    </Tooltip>
                     {u.status === 1 ? (
                       <Button size="sm" variant="ghost" onClick={() => disableM.mutate(u.id)}>
                         <PowerOff className="h-4 w-4" />
@@ -189,6 +199,12 @@ export function Users() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <SubscriptionDialog
+        userId={subFor?.id ?? null}
+        username={subFor?.username}
+        onClose={() => setSubFor(null)}
+      />
     </div>
   );
 }

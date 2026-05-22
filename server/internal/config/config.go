@@ -27,6 +27,15 @@ type Config struct {
 	XrayAPIPort    string
 	XrayInboundTag string
 
+	// PublicHost/PublicPort：客户端订阅链接里写的连接地址（兜底，节点未单独配置时使用）
+	PublicHost string
+	PublicPort int
+
+	// Reality 客户端侧参数（与 deploy/xray/config.json 里的入站对应）
+	RealityPublicKey string
+	RealitySNI       string
+	RealityShortID   string
+
 	TrafficPollInterval time.Duration
 }
 
@@ -53,6 +62,12 @@ func Load() (*Config, error) {
 		XrayAPIHost:    getenv("XRAY_API_HOST", "127.0.0.1"),
 		XrayAPIPort:    getenv("XRAY_API_PORT", "8894"),
 		XrayInboundTag: getenv("XRAY_INBOUND_TAG", "vless-in"),
+
+		PublicHost:       getenv("PUBLIC_HOST", "127.0.0.1"),
+		PublicPort:       getenvInt("PUBLIC_PORT", 8895),
+		RealityPublicKey: getenv("REALITY_PUBLIC_KEY", ""),
+		RealitySNI:       getenv("REALITY_SNI", "www.cloudflare.com"),
+		RealityShortID:   getenv("REALITY_SHORT_ID", ""),
 
 		TrafficPollInterval: time.Duration(getenvInt("TRAFFIC_POLL_SECONDS", 60)) * time.Second,
 	}, nil

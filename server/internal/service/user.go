@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/routex/routex/internal/model"
+	"github.com/routex/routex/internal/util"
 	"github.com/routex/routex/internal/xray"
 	"gorm.io/gorm"
 )
@@ -32,11 +33,12 @@ type CreateUserInput struct {
 // Xray 失败时回滚 DB，保证两边一致。
 func (s *UserService) Create(ctx context.Context, in CreateUserInput) (*model.User, error) {
 	u := &model.User{
-		Username:     in.Username,
-		UUID:         uuid.NewString(),
-		Status:       1,
-		TrafficLimit: in.TrafficLimit,
-		ExpireTime:   in.ExpireTime,
+		Username:          in.Username,
+		UUID:              uuid.NewString(),
+		Status:            1,
+		TrafficLimit:      in.TrafficLimit,
+		ExpireTime:        in.ExpireTime,
+		SubscriptionToken: util.RandPassword(32),
 	}
 	if err := s.db.WithContext(ctx).Create(u).Error; err != nil {
 		return nil, err

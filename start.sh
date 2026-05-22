@@ -65,6 +65,20 @@ if [ ! -f deploy/xray/config.json ]; then
 
   echo "    PrivateKey: 已写入 deploy/xray/config.json (gitignored)"
   echo "    PublicKey:  $public_key   ← 客户端订阅链接会用到"
+
+  # 同步把 PublicKey 写回 .env（订阅 service 需要它生成 vless:// 链接）
+  if [ -n "$public_key" ] && [ -f .env ]; then
+    if grep -q "^REALITY_PUBLIC_KEY=" .env; then
+      if [[ "$(uname)" == "Darwin" ]]; then
+        sed -i '' "s|^REALITY_PUBLIC_KEY=.*|REALITY_PUBLIC_KEY=$public_key|" .env
+      else
+        sed -i "s|^REALITY_PUBLIC_KEY=.*|REALITY_PUBLIC_KEY=$public_key|" .env
+      fi
+    else
+      echo "REALITY_PUBLIC_KEY=$public_key" >> .env
+    fi
+    echo "    PublicKey 已同步写入 .env (REALITY_PUBLIC_KEY)"
+  fi
 fi
 
 # ---------- 1. Docker 基础设施 ----------

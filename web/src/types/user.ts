@@ -6,6 +6,7 @@ export interface User {
   traffic_limit: number;
   used_traffic: number;
   expire_time: string;
+  subscription_token: string;
   created_at: string;
   updated_at: string;
 }

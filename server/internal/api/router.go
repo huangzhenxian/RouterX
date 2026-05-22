@@ -11,12 +11,13 @@ import (
 )
 
 type Deps struct {
-	Cfg    *config.Config
-	Log    *zap.Logger
-	XC     *xray.Client
-	Users  *service.UserService
-	Admins *service.AdminService
-	Nodes  *service.NodeService
+	Cfg     *config.Config
+	Log     *zap.Logger
+	XC      *xray.Client
+	Users   *service.UserService
+	Admins  *service.AdminService
+	Nodes   *service.NodeService
+	Subs    *service.SubscriptionService
 }
 
 func NewRouter(d Deps) *gin.Engine {
@@ -37,16 +38,19 @@ func NewRouter(d Deps) *gin.Engine {
 	{
 		v1.GET("/health", Health)
 
-		// 公开：管理员登录
 		v1.POST("/admin/login", newAdminAPI(d.Admins).Login)
 
-		// 节点 agent 心跳：用 X-Node-Token 鉴权，不走 JWT
+		// 公开订阅入口：token 即凭证，无 JWT
+		subs := newSubAPI(d.Subs, d.Users)
+		v1.GET("/sub/:token", subs.Public)
+
+		// 节点 agent 心跳：X-Node-Token
 		nodeAPI := newNodeAPI(d.Nodes)
 		nodeAuthed := v1.Group("")
 		nodeAuthed.Use(middleware.NodeAuth(d.Nodes))
 		nodeAuthed.POST("/nodes/heartbeat", nodeAPI.Heartbeat)
 
-		// 后台管理：JWT 鉴权
+		// 后台管理：JWT
 		authed := v1.Group("")
 		authed.Use(middleware.JWTAuth(d.Cfg.JWTSecret))
 		{
@@ -57,6 +61,7 @@ func NewRouter(d Deps) *gin.Engine {
 			authed.DELETE("/users/:id", u.Delete)
 			authed.POST("/users/:id/enable", u.Enable)
 			authed.POST("/users/:id/disable", u.Disable)
+			authed.GET("/users/:id/subscription", subs.AdminView)
 
 			authed.POST("/nodes", nodeAPI.Create)
 			authed.GET("/nodes", nodeAPI.List)
