@@ -40,6 +40,33 @@ if [ "$already_running" = true ]; then
   exit 1
 fi
 
+# ---------- 0. Xray 本地配置 + Reality 密钥 ----------
+if [ ! -f deploy/xray/config.json ]; then
+  echo "==> 首次启动：生成 deploy/xray/config.json（含真实 Reality 私钥）"
+  cp deploy/xray/config.example.json deploy/xray/config.json
+
+  key_output=$(docker run --rm teddysun/xray xray x25519 2>&1)
+  private_key=$(echo "$key_output" | awk -F': *' '/PrivateKey:/ {print $2}')
+  public_key=$(echo "$key_output"  | awk -F': *' '/PublicKey/ {print $2}')
+
+  if [ -z "$private_key" ]; then
+    echo "✗ 生成 Reality 密钥失败，请手动 docker run --rm teddysun/xray xray x25519 后填到 deploy/xray/config.json" >&2
+    echo "  原始输出:" >&2
+    echo "$key_output" >&2
+    exit 1
+  fi
+
+  # macOS sed 与 GNU sed 的 -i 参数语法不同
+  if [[ "$(uname)" == "Darwin" ]]; then
+    sed -i '' "s|REPLACE_WITH_xray_x25519_PRIVATE_KEY|$private_key|" deploy/xray/config.json
+  else
+    sed -i "s|REPLACE_WITH_xray_x25519_PRIVATE_KEY|$private_key|" deploy/xray/config.json
+  fi
+
+  echo "    PrivateKey: 已写入 deploy/xray/config.json (gitignored)"
+  echo "    PublicKey:  $public_key   ← 客户端订阅链接会用到"
+fi
+
 # ---------- 1. Docker 基础设施 ----------
 echo "==> 启动 docker 服务（postgres / redis / xray / sing-box）"
 docker compose up -d postgres redis xray sing-box

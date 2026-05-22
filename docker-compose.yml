@@ -11,7 +11,8 @@ services:
       - "8892:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./migrations:/docker-entrypoint-initdb.d:ro
+      # 注：不挂载 ./migrations 当 initdb 脚本，避免与 GORM AutoMigrate 冲突。
+      # migrations/*.sql 仅作 schema 参考文档使用。
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-routex}"]
       interval: 5s

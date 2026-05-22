@@ -1,5 +1,8 @@
--- RouteX 初始化 schema
--- 注意：GORM AutoMigrate 已经会建表，这份 SQL 作为参考与裸库初始化使用。
+-- RouteX 初始化 schema —— 仅作参考文档使用，不会被自动执行。
+--
+-- 实际建表由 Go 后端启动时的 GORM AutoMigrate 完成（见 server/internal/db/db.go）。
+-- 这份文件是给运维/DBA 看的 schema 速览；如果某个字段在这里和 model 不一致，
+-- 以 model 为准（GORM 是 source of truth）。
 
 CREATE TABLE IF NOT EXISTS users (
     id              BIGSERIAL PRIMARY KEY,

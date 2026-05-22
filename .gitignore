@@ -61,6 +61,5 @@ data/
 postgres_data/
 redis_data/
 
-# ===== 提醒 =====
-# deploy/xray/config.json 含 Reality privateKey，请勿把真实密钥提交到仓库。
-# 推荐做法：本地改名为 config.local.json 并把 config.json 当成模板维护。
+# ===== Xray 本地配置（含真实 Reality 私钥）=====
+deploy/xray/config.json
