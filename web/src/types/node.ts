@@ -17,6 +17,8 @@ export interface CreateNodeInput {
   name: string;
   ip?: string;
   region?: string;
+  public_host?: string;
+  public_port?: number;
 }
 
 export interface CreateNodeResult {

@@ -16,9 +16,11 @@ type NodeService struct {
 func NewNodeService(db *gorm.DB) *NodeService { return &NodeService{db: db} }
 
 type CreateNodeInput struct {
-	Name   string `json:"name"   binding:"required"`
-	IP     string `json:"ip"`
-	Region string `json:"region"`
+	Name       string `json:"name"        binding:"required"`
+	IP         string `json:"ip"`          // 运维 IP（ssh / 监控用），与 PublicHost 可不同（如反代时）
+	Region     string `json:"region"`
+	PublicHost string `json:"public_host"` // 客户端 vless:// 连接的 host，留空则订阅服务回落到 .env 的 PUBLIC_HOST
+	PublicPort int    `json:"public_port"` // 客户端 vless 端口，留空则回落到 .env 的 PUBLIC_PORT
 }
 
 type CreateNodeResult struct {
@@ -31,11 +33,13 @@ type CreateNodeResult struct {
 func (s *NodeService) Create(ctx context.Context, in CreateNodeInput) (*CreateNodeResult, error) {
 	token := util.RandPassword(40)
 	node := &model.Node{
-		Name:      in.Name,
-		IP:        in.IP,
-		Region:    in.Region,
-		Status:    1,
-		AuthToken: token,
+		Name:       in.Name,
+		IP:         in.IP,
+		Region:     in.Region,
+		PublicHost: in.PublicHost,
+		PublicPort: in.PublicPort,
+		Status:     1,
+		AuthToken:  token,
 	}
 	if err := s.db.WithContext(ctx).Create(node).Error; err != nil {
 		return nil, err
