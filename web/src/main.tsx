@@ -1,11 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { ConfigProvider } from 'antd';
-import zhCN from 'antd/locale/zh_CN';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from 'react-router-dom';
+import { Toaster } from 'sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { router } from '@/router';
-import 'antd/dist/reset.css';
+import '@/globals.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -15,10 +15,11 @@ const queryClient = new QueryClient({
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <ConfigProvider locale={zhCN}>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider delayDuration={200}>
         <RouterProvider router={router} />
-      </QueryClientProvider>
-    </ConfigProvider>
+        <Toaster position="top-right" richColors closeButton />
+      </TooltipProvider>
+    </QueryClientProvider>
   </React.StrictMode>,
 );
