@@ -19,6 +19,7 @@ type Deps struct {
 	Nodes     *service.NodeService
 	Subs      *service.SubscriptionService
 	Providers *service.ProviderService
+	RouterSvc *service.RouterService
 }
 
 func NewRouter(d Deps) *gin.Engine {
@@ -73,6 +74,10 @@ func NewRouter(d Deps) *gin.Engine {
 			authed.POST("/providers/:id/enable", p.Enable)
 			authed.POST("/providers/:id/disable", p.Disable)
 			authed.POST("/providers/:id/test", p.Test)
+
+			rt := newRouterAPI(d.RouterSvc, d.Providers)
+			authed.GET("/router/active", rt.Active)
+			authed.POST("/router/sync", rt.Sync)
 		}
 
 		if d.Cfg.AppEnv != "prod" {

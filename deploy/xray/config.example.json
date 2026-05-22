@@ -70,8 +70,9 @@
   ],
 
   "outbounds": [
-    { "tag": "direct", "protocol": "freedom" },
-    { "tag": "block",  "protocol": "blackhole" }
+    { "tag": "direct",    "protocol": "freedom" },
+    { "tag": "block",     "protocol": "blackhole" },
+    { "tag": "proxy-out", "protocol": "freedom" }
   ],
 
   "routing": {
@@ -81,6 +82,11 @@
         "type": "field",
         "inboundTag": ["api-in"],
         "outboundTag": "api"
+      },
+      {
+        "type": "field",
+        "inboundTag": ["vless-in"],
+        "outboundTag": "proxy-out"
       }
     ]
   }

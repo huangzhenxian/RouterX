@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Plus, Power, PowerOff, Trash2, Activity, AlertCircle } from 'lucide-react';
+import { Plus, Power, PowerOff, Trash2, Activity, AlertCircle, RefreshCw, Network, ArrowRight } from 'lucide-react';
 import {
   listProviders,
   createProvider,
@@ -9,6 +9,8 @@ import {
   enableProvider,
   disableProvider,
   testProvider,
+  getActiveRouter,
+  syncRouter,
 } from '@/api/providers';
 import type { CreateProviderInput } from '@/types/provider';
 import { cn, errorMessage } from '@/lib/utils';
@@ -48,6 +50,22 @@ export function Providers() {
     refetchInterval: 15_000,
   });
   const providers = data?.items ?? [];
+
+  const { data: active } = useQuery({
+    queryKey: ['router-active'],
+    queryFn: getActiveRouter,
+    refetchInterval: 10_000,
+  });
+
+  const syncM = useMutation({
+    mutationFn: syncRouter,
+    onSuccess: () => {
+      toast.success('已重新选择最优出口');
+      qc.invalidateQueries({ queryKey: ['router-active'] });
+      qc.invalidateQueries({ queryKey: ['providers'] });
+    },
+    onError: (e) => toast.error(errorMessage(e, '切换失败')),
+  });
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<CreateProviderInput>(blankForm);
@@ -111,6 +129,54 @@ export function Providers() {
           新增代理
         </Button>
       </div>
+
+      {/* 当前活跃出口 banner */}
+      <Card className="p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="h-10 w-10 rounded-md bg-primary/10 text-primary inline-flex items-center justify-center shrink-0">
+              <Network className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs text-muted-foreground">VLESS 流量当前出口</div>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-sm font-mono text-muted-foreground">vless-in</span>
+                <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                {active?.mode === 'provider' && active.provider ? (
+                  <>
+                    <span className="font-medium">{active.provider.name}</span>
+                    <Badge variant="outline" className="text-xs uppercase">{active.provider.type}</Badge>
+                    <span className="text-xs font-mono text-muted-foreground">
+                      {active.provider.host}:{active.provider.port}
+                    </span>
+                    {active.provider.latency_ms > 0 && (
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        {active.provider.latency_ms} ms
+                      </span>
+                    )}
+                  </>
+                ) : active?.mode === 'stale' ? (
+                  <Badge variant="warning">活跃出口已被删除</Badge>
+                ) : (
+                  <>
+                    <span className="font-medium text-muted-foreground">直连（无 provider）</span>
+                    <Badge variant="secondary">freedom</Badge>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => syncM.mutate()}
+            disabled={syncM.isPending}
+          >
+            <RefreshCw className={cn('h-4 w-4', syncM.isPending && 'animate-spin')} />
+            重新选择
+          </Button>
+        </div>
+      </Card>
 
       <Card>
         <Table>

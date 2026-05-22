@@ -58,6 +58,7 @@ func main() {
 	nodeSvc := service.NewNodeService(gormDB)
 	subSvc := service.NewSubscriptionService(gormDB, cfg)
 	providerSvc := service.NewProviderService(gormDB)
+	routerSvc := service.NewRouterService(gormDB, xrayClient, zlog)
 
 	// 后台调度：流量轮询 + Xray 健康/自愈
 	ctx, cancel := context.WithCancel(context.Background())
@@ -65,11 +66,11 @@ func main() {
 	collector := scheduler.NewTrafficCollector(gormDB, xrayClient, userSvc, zlog, cfg.TrafficPollInterval)
 	go collector.Run(ctx)
 
-	watcher := scheduler.NewXrayWatcher(xrayClient, userSvc, zlog, 15*time.Second)
+	watcher := scheduler.NewXrayWatcher(xrayClient, userSvc, routerSvc, zlog, 15*time.Second)
 	watcher.SyncNow(ctx) // 启动时立刻同步一次
 	go watcher.Run(ctx)
 
-	providerChecker := scheduler.NewProviderHealthChecker(providerSvc, zlog, cfg.ProviderHealthInterval)
+	providerChecker := scheduler.NewProviderHealthChecker(providerSvc, routerSvc, zlog, cfg.ProviderHealthInterval)
 	go providerChecker.Run(ctx)
 
 	// HTTP 路由
@@ -82,6 +83,7 @@ func main() {
 		Nodes:     nodeSvc,
 		Subs:      subSvc,
 		Providers: providerSvc,
+		RouterSvc: routerSvc,
 	})
 
 	srv := &http.Server{
