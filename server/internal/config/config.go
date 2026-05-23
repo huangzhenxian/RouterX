@@ -38,6 +38,10 @@ type Config struct {
 
 	TrafficPollInterval    time.Duration
 	ProviderHealthInterval time.Duration
+
+	// WebOrigin 允许跨域的前端域名（CORS）。
+	// 生产部署 nginx 同源时其实用不上，留着兼容 dev 直连 / 别的部署方式。
+	WebOrigin string
 }
 
 func Load() (*Config, error) {
@@ -72,6 +76,8 @@ func Load() (*Config, error) {
 
 		TrafficPollInterval:    time.Duration(getenvInt("TRAFFIC_POLL_SECONDS", 60)) * time.Second,
 		ProviderHealthInterval: time.Duration(getenvInt("PROVIDER_HEALTH_SECONDS", 120)) * time.Second,
+
+		WebOrigin: getenv("WEB_ORIGIN", "http://localhost:8890"),
 	}, nil
 }
 

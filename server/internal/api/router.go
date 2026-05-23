@@ -1,6 +1,8 @@
 package api
 
 import (
+	"strings"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/routex/routex/internal/config"
@@ -29,8 +31,14 @@ func NewRouter(d Deps) *gin.Engine {
 
 	r := gin.New()
 	r.Use(gin.Recovery())
+
+	// CORS 允许列表用逗号分隔；生产 nginx 同源时这里其实用不上，但保留兼容性
+	origins := strings.Split(d.Cfg.WebOrigin, ",")
+	for i := range origins {
+		origins[i] = strings.TrimSpace(origins[i])
+	}
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:8890"},
+		AllowOrigins:     origins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "X-Node-Token"},
 		AllowCredentials: true,
