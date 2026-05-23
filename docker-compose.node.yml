@@ -1,0 +1,41 @@
+# 节点 VPS 部署 —— 只跑 Xray + agent，没有后端 / 数据库。
+#
+# 在节点机器上：
+#   git clone <repo> /srv/routex-node && cd /srv/routex-node
+#   ./install-node.sh
+#
+# install-node.sh 会问 3 个问题（控制台 URL / 节点 token / Reality privateKey），
+# 然后生成 .env.node + deploy/xray/config.json 并跑这个 compose。
+
+services:
+  xray:
+    image: teddysun/xray:latest
+    container_name: routex-node-xray
+    restart: unless-stopped
+    ports:
+      # 客户端 VLESS 入站。生产建议改 443:443
+      - "${PUBLIC_PORT:-8895}:443"
+    volumes:
+      # 这台节点专属配置，含本机 Reality privateKey
+      - ./deploy/xray/config.json:/etc/xray/config.json:ro
+      - xray_logs:/var/log/xray
+    command: ["xray", "run", "-config", "/etc/xray/config.json"]
+    # ⚠️ 注意：gRPC API 10085 故意不暴露主机端口。
+    #   未来 agent 中间层会在容器网络内访问它，外部碰不到。
+
+  agent:
+    build:
+      context: ./server
+      dockerfile: cmd/agent/Dockerfile
+    image: routex/agent:latest
+    container_name: routex-node-agent
+    restart: unless-stopped
+    depends_on:
+      - xray
+    environment:
+      ROUTEX_API_URL:    ${ROUTEX_API_URL:?ROUTEX_API_URL must be set in .env.node}
+      ROUTEX_NODE_TOKEN: ${ROUTEX_NODE_TOKEN:?ROUTEX_NODE_TOKEN must be set in .env.node}
+      ROUTEX_HEARTBEAT_INTERVAL: ${ROUTEX_HEARTBEAT_INTERVAL:-30s}
+
+volumes:
+  xray_logs:
