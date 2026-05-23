@@ -17,7 +17,7 @@ const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: '概览' },
   { to: '/users',     icon: UsersIcon,       label: '用户' },
   { to: '/nodes',     icon: Server,          label: '节点' },
-  { to: '/providers', icon: Network,         label: '出口代理' },
+  { to: '/providers', icon: Network,         label: '出口' },
 ];
 
 export function AppLayout() {

@@ -119,14 +119,14 @@ export function Providers() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">出口代理</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">出口</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            住宅 / 数据中心 SOCKS5/HTTP 代理池，调度器每 2 分钟检查一次
+            住宅 / 数据中心 SOCKS5/HTTP 出口池，调度器每 2 分钟检查一次
           </p>
         </div>
         <Button onClick={() => setOpen(true)}>
           <Plus className="h-4 w-4" />
-          新增代理
+          新增出口
         </Button>
       </div>
 
@@ -200,7 +200,7 @@ export function Providers() {
               <TableRow><TableCell colSpan={11} className="text-center text-sm text-muted-foreground py-8">加载中…</TableCell></TableRow>
             )}
             {!isLoading && providers.length === 0 && (
-              <TableRow><TableCell colSpan={11} className="text-center text-sm text-muted-foreground py-8">还没有代理，点右上角新增一条</TableCell></TableRow>
+              <TableRow><TableCell colSpan={11} className="text-center text-sm text-muted-foreground py-8">还没有出口，点右上角新增一条</TableCell></TableRow>
             )}
             {providers.map((p) => (
               <TableRow key={p.id}>
@@ -286,8 +286,8 @@ export function Providers() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>新增出口代理</DialogTitle>
-            <DialogDescription>SOCKS5 / HTTP / HTTPS 代理，可带用户名密码</DialogDescription>
+            <DialogTitle>新增出口</DialogTitle>
+            <DialogDescription>SOCKS5 / HTTP / HTTPS 出口，可带用户名密码</DialogDescription>
           </DialogHeader>
           <form
             onSubmit={(e) => { e.preventDefault(); createM.mutate(form); }}

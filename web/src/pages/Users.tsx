@@ -67,7 +67,7 @@ export function Users() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">用户</h1>
-          <p className="text-sm text-muted-foreground mt-1">代理用户管理，新建后自动同步到 Xray 入站</p>
+          <p className="text-sm text-muted-foreground mt-1">用户管理，新建后自动同步到节点的 Xray 入站</p>
         </div>
         <Button onClick={() => setOpen(true)}>
           <Plus className="h-4 w-4" />
