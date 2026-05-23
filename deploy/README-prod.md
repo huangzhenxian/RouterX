@@ -2,85 +2,80 @@
 
 把整套（后台 + Xray + DB）跑在一台 VPS 上。出口分散由你后台里加的 SOCKS5 代理池负责，不靠多入口节点。
 
-## 一、配置 VPS
-
-最低配置：1 核 2G，20G 硬盘，带宽建议 ≥ 100Mbps。  
+最低配置：1 核 2G，20G 硬盘，带宽 ≥ 100Mbps。  
 推荐：2 核 4G + 1Gbps（100~500 用户）。
 
-必须装：
+## 🚀 一键部署（推荐）
 
 ```bash
-# Debian/Ubuntu 示例
-curl -fsSL https://get.docker.com | sh
-sudo systemctl enable --now docker
-sudo usermod -aG docker $USER   # 重新登录生效
+# 1. 把代码搬上 VPS（任选其一）
+git clone <你的repo> /srv/routex
+# 或：rsync -avz ./ user@vps:/srv/routex/
+
+# 2. 跑安装脚本
+cd /srv/routex
+./install.sh
 ```
 
-防火墙放行（云服务商安全组里也放）：
-- TCP **80**（管理面板，后面建议套 HTTPS）
-- TCP **443**（VLESS+Reality 入站，或者你改成 8895）
+脚本会自动：
+- 装 Docker（没装的话）
+- 跑 `xray x25519` 生成 Reality 密钥
+- 生成强随机 JWT_SECRET / POSTGRES_PASSWORD
+- 问你**一个问题**：公网地址（域名或 IP）
+- `docker compose up -d --build`
+- 打印默认管理员密码
 
-## 二、上传代码到 VPS
+完事。打开 `http://<你的VPS>` 用 admin + 终端打印的密码登录。
 
-```bash
-# 在本地
-rsync -avz --exclude='.git' --exclude='node_modules' --exclude='logs' \
-  --exclude='.pids' --exclude='bin' --exclude='.env' \
-  /path/to/RouteX/ user@your-vps:/srv/routex/
-```
+防火墙记得放行：
+- TCP `80`（管理面板）
+- TCP `8895`（VLESS 入站，可改 443）
 
-或者直接 `git clone`，如果你把仓库放上 GitHub 的话。
+## 重新跑 install.sh 也安全
 
-## 三、首次部署
+已存在的 `.env` 和 `deploy/xray/config.json` 不会被覆盖，相当于幂等。
+
+## 手动部署（不想用 install.sh 的话）
+
+<details>
+<summary>展开</summary>
 
 ### 1. 生成 Reality 密钥
 
-在 VPS 上：
-
 ```bash
-cd /srv/routex
 docker run --rm teddysun/xray xray x25519
 ```
 
-记下输出的 `PrivateKey` 和 `PublicKey`，下面要用。
+记下 PrivateKey 和 PublicKey。
 
-### 2. 准备 Xray 配置
+### 2. Xray 配置
 
 ```bash
 cp deploy/xray/config.example.json deploy/xray/config.json
-# 把 config.json 里的 REPLACE_WITH_xray_x25519_PRIVATE_KEY 改成上面的 PrivateKey
-vim deploy/xray/config.json
+vim deploy/xray/config.json   # 填 PrivateKey
 ```
 
-### 3. 准备 .env
+### 3. .env
 
 ```bash
 cp .env.prod.example .env
 vim .env
 ```
 
-至少要改这几项：
+至少要改：
 
 | key | 改成什么 |
 |---|---|
-| `APP_JWT_SECRET` | `openssl rand -hex 32` 的输出 |
-| `POSTGRES_PASSWORD` | 随便一个 16 位以上强密码 |
-| `PUBLIC_HOST` | 你 VPS 的公网域名或 IP（客户端连这里） |
-| `PUBLIC_PORT` | 生产建议 `443`（同时把 docker-compose.prod.yml 的 8895:443 改成 443:443，或者由 `PUBLIC_PORT` env 自动驱动） |
-| `REALITY_PUBLIC_KEY` | 上面 x25519 输出的 PublicKey |
-| `WEB_ORIGIN` | 你管理面板的 URL，例如 `http://1.2.3.4` 或 `https://admin.yourdomain.com` |
+| `APP_JWT_SECRET` | `openssl rand -hex 32` |
+| `POSTGRES_PASSWORD` | 强随机 |
+| `PUBLIC_HOST` | 你的域名或 IP |
+| `REALITY_PUBLIC_KEY` | 上面那个 PublicKey |
+| `WEB_ORIGIN` | `http://你的域名` |
 
 ### 4. 起服务
 
 ```bash
-docker compose -f docker-compose.prod.yml --env-file .env up -d --build
-```
-
-第一次会编 Go + 编前端，约 1-3 分钟。完成后看状态：
-
-```bash
-docker compose -f docker-compose.prod.yml ps
-docker compose -f docker-compose.prod.yml logs -f --tail=200
+docker compose -f docker-compose.prod.yml up -d --build
 ```
 
 ### 5. 拿默认管理员密码
@@ -89,11 +84,7 @@ docker compose -f docker-compose.prod.yml logs -f --tail=200
 docker compose -f docker-compose.prod.yml logs server | grep BOOTSTRAP_ADMIN
 ```
 
-抄下 `password=` 后面那串。
-
-### 6. 登录
-
-浏览器打开 `http://<你VPS的IP>` 或 `http://<你的域名>`，用 `admin` + 上面那个密码登录。
+</details>
 
 ## 四、日常运维
 
