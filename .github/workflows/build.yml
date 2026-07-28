@@ -1,0 +1,48 @@
+name: Build and push image to ACR
+
+# 简化发布:推到 main/master 或打任意 tag,都构建并推 single-channel 的 latest。
+# 镜像:registry.cn-hongkong.aliyuncs.com/mewtwo_zero/routex:latest
+on:
+  push:
+    branches: [main, master]
+    tags: ["*"]
+  workflow_dispatch:
+
+env:
+  REGISTRY: registry.cn-hongkong.aliyuncs.com
+  NAMESPACE: mewtwo_zero
+  IMAGE: routex
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute image tags
+        id: meta
+        run: |
+          BASE="$REGISTRY/$NAMESPACE/$IMAGE"
+          TAGS="$BASE:latest"
+          # 打 tag 时额外推一个以 tag 命名的镜像,便于回溯/锁定版本
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            TAGS="$TAGS,$BASE:$GITHUB_REF_NAME"
+          fi
+          echo "tags=$TAGS" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to ACR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}

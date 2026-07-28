@@ -1,0 +1,44 @@
+# Docker 构建上下文裁剪：只带构建需要的文件，别把本地垃圾打进镜像。
+.git
+.github
+node_modules
+**/node_modules
+dist
+**/dist
+web/dist
+
+# 本地运行产物 / 日志
+logs
+*.log
+.pids
+tmp
+**/tmp
+
+# 环境与密钥（镜像里用 compose 的 env 注入，绝不烤进镜像）
+.env
+.env.*
+!.env.example
+!.env.prod.example
+secrets
+
+# 含真实 Reality 私钥的本地 Xray 配置
+deploy/xray/config.json
+
+# 数据卷 / 备份
+data
+postgres_data
+redis_data
+backups
+*.sql
+*.sql.gz
+
+# 文档与杂项（不进镜像）
+需求.md
+*.md
+!README.md
+.vscode
+.idea
+.DS_Store
+*.tsbuildinfo
+web/vite.config.js
+web/vite.config.d.ts

@@ -1,0 +1,85 @@
+# RouteX 服务器部署栈 —— 整套从镜像仓库拉取运行,服务器不需要 checkout 代码。
+# 应用镜像:registry.cn-hongkong.aliyuncs.com/mewtwo_zero/routex:latest
+#   单容器内含 nginx(前端+反代) + Go 后端,由 supervisord 编排。
+# 依赖(postgres/redis/xray)用官方镜像,随本栈一起跑。
+#
+# 用法见同目录 README.md。日常更新:./restart.sh
+
+name: routex
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: routex-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-routex}
+      POSTGRES_USER: ${POSTGRES_USER:-routex}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-routex}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    # 不对外暴露端口;只应用容器走 docker 网络访问
+
+  redis:
+    image: redis:7-alpine
+    container_name: routex-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  xray:
+    image: teddysun/xray:latest
+    container_name: routex-xray
+    restart: unless-stopped
+    ports:
+      # 客户端 VLESS+Reality 入站,这是必须公网可达的端口。
+      - "${PUBLIC_PORT:-8895}:443"
+    volumes:
+      # ⚠️ 必须先存在并填好真实 privateKey(见 README / install.sh)
+      - ./xray/config.json:/etc/xray/config.json:ro
+      - xray_logs:/var/log/xray
+    command: ["xray", "run", "-config", "/etc/xray/config.json"]
+    # gRPC API 10085 只在 docker 网络内可达,绝不对外暴露
+
+  app:
+    # 单镜像全栈:nginx + Go 后端。
+    image: registry.cn-hongkong.aliyuncs.com/mewtwo_zero/routex:${IMAGE_TAG:-latest}
+    container_name: routex-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      xray:
+        condition: service_started
+    ports:
+      # 管理面板。默认只绑 127.0.0.1 —— Docker 发布端口会绕过宿主防火墙,
+      # 直接 0.0.0.0 就是公网裸奔。对外访问由 nginx/caddy 反代 80/443 进来。
+      - "${APP_BIND:-127.0.0.1}:${APP_PORT:-8890}:80"
+    env_file: .env
+    environment:
+      # 容器互联用 docker DNS(service 名),覆盖 .env 里给本机开发用的 127.0.0.1。
+      APP_ENV:        prod
+      APP_PORT:       "8891"
+      POSTGRES_HOST:  postgres
+      POSTGRES_PORT:  "5432"
+      REDIS_HOST:     redis
+      REDIS_PORT:     "6379"
+      XRAY_API_HOST:  xray
+      XRAY_API_PORT:  "10085"
+
+volumes:
+  postgres_data:
+  redis_data:
+  xray_logs:
