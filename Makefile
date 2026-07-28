@@ -2,15 +2,15 @@
 
 help:
 	@echo "Targets:"
-	@echo "  up        启动 docker compose 基础设施（pg/redis/xray/sing-box）"
-	@echo "  down      停止全部容器"
-	@echo "  logs      查看 compose 实时日志"
-	@echo "  ps        查看容器状态"
-	@echo "  server    本地启动 Go 后端"
-	@echo "  web       本地启动 React 前端"
-	@echo "  check-env 检查 .env 是否与 .env.example 漂移"
-	@echo "  reset     停服 + 重置 .env（保留 DB 数据）"
-	@echo "  nuke      停服 + 重置 .env + 删 DB/Redis 数据卷（不可恢复）"
+	@echo "  up           启动 docker compose 基础设施（pg/redis/xray）"
+	@echo "  down         停止全部容器"
+	@echo "  logs         查看 compose 实时日志"
+	@echo "  ps           查看容器状态"
+	@echo "  server       本地启动 Go 后端"
+	@echo "  web          本地启动 React 前端"
+	@echo "  check-env    检查 .env 是否与 .env.example 漂移"
+	@echo "  reset        停服 + 重置 .env（保留 DB 数据）"
+	@echo "  nuke         停服 + 重置 .env + 删 DB/Redis 数据卷（不可恢复）"
 
 up:
 	docker compose up -d

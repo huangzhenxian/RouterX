@@ -82,11 +82,11 @@ if [ ! -f deploy/xray/config.json ]; then
 fi
 
 # ---------- 1. Docker 基础设施 ----------
-echo "==> 启动 docker 服务（postgres / redis / xray / sing-box）"
-docker compose up -d postgres redis xray sing-box
+echo "==> 启动 docker 服务（postgres / redis / xray）"
+docker compose up -d postgres redis xray
 
 # 把 docker 服务日志聚合输出到一个文件，方便 tail -f
-( docker compose logs -f --no-log-prefix postgres redis xray sing-box \
+( docker compose logs -f --no-log-prefix postgres redis xray \
     > logs/docker.log 2>&1 ) &
 DOCKER_LOG_PID=$!
 echo $DOCKER_LOG_PID > .pids/docker-logs.pid

@@ -45,7 +45,7 @@ services:
       # 客户端 VLESS+Reality 入站,这是必须公网可达的端口。
       - "${PUBLIC_PORT:-8895}:443"
     volumes:
-      # ⚠️ 必须先存在并填好真实 privateKey(见 README / install.sh)
+      # ⚠️ 必须先存在并填好真实 privateKey(见同目录 README.md)
       - ./xray/config.json:/etc/xray/config.json:ro
       - xray_logs:/var/log/xray
     command: ["xray", "run", "-config", "/etc/xray/config.json"]

@@ -11,7 +11,7 @@ RouteX is a multi-user proxy admin platform: **Xray-core entry + SOCKS5/HTTP out
 The user has a hard requirement: **everything starts/stops via `./start.sh` and `./stop.sh` from the repo root**. Do not invent new entry points or tell them to run `go run ./cmd/server` directly.
 
 ```bash
-./start.sh    # docker (pg/redis/xray/sing-box) + Go backend + React frontend
+./start.sh    # docker (pg/redis/xray) + Go backend + React frontend
               # Ctrl+C exits log tail only; services keep running
 ./stop.sh     # actually stops everything (preserves volumes)
 make reset    # nuke .env, keep DB data
@@ -32,7 +32,6 @@ The user moved every host-side port off the conventional defaults to avoid confl
 | 8893 | Redis |
 | 8894 | Xray gRPC API |
 | 8895 | Xray VLESS+Reality inbound |
-| 8896 | sing-box Clash API (unused yet) |
 
 `.env.example` and `config.go` defaults are aligned with this range. `scripts/check-env.sh` warns when `.env` drifts from `.env.example`.
 
@@ -77,7 +76,7 @@ Same URL serves both. Per-node URLs use `Node.PublicHost/PublicPort`, falling ba
 
 Two paths exist:
 - **Dev (this machine)** — `./start.sh`. Backend runs on host via `go run`, talks to Xray in docker via `127.0.0.1:8894`.
-- **Prod (VPS)** — `./install.sh` runs `docker-compose.prod.yml`. Backend runs in a container, talks to Xray via docker DNS `xray:10085`. Same `.env`, but the prod compose overrides hosts via `environment:` block. See `deploy/README-prod.md`.
+- **Prod (VPS, registry images)** — the server runs the stack from pulled images, no repo checkout. Push to `main`/`master` (or any tag) → GitHub Actions builds and pushes the single all-in-one image `registry.cn-hongkong.aliyuncs.com/mewtwo_zero/routex:latest`. On the server, `deploy/registry/restart.sh` pulls + recreates. The image packs nginx (frontend + `/v1` reverse-proxy to `127.0.0.1:8891`) + the Go backend under supervisord; postgres/redis/xray are stock images in `deploy/registry/docker-compose.yml`. See `deploy/registry/README.md`. Requires `ACR_USERNAME`/`ACR_PASSWORD` GitHub secrets.
 
 ## Git hygiene
 

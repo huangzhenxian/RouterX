@@ -45,16 +45,6 @@ services:
       - xray_logs:/var/log/xray
     command: ["xray", "run", "-config", "/etc/xray/config.json"]
 
-  sing-box:
-    image: ghcr.io/sagernet/sing-box:latest
-    container_name: routex-singbox
-    restart: unless-stopped
-    ports:
-      - "8896:9090"     # Clash API / sing-box API
-    volumes:
-      - ./deploy/sing-box/config.json:/etc/sing-box/config.json:ro
-    command: ["run", "-c", "/etc/sing-box/config.json"]
-
 volumes:
   postgres_data:
   redis_data:

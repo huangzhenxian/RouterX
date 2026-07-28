@@ -45,7 +45,7 @@ reality_pub=$(env_value REALITY_PUBLIC_KEY)
 [[ -n "$reality_pub" && "$reality_pub" != *REPLACE-ME* ]] \
   || fail_preflight "REALITY_PUBLIC_KEY 未设置(跑 docker run --rm teddysun/xray xray x25519)"
 
-# Xray 真实配置必须存在(install.sh 生成,含 Reality 私钥)。
+# Xray 真实配置必须存在(含 Reality 私钥,生成见同目录 README.md)。
 [[ -f ./xray/config.json ]] \
   || fail_preflight "./xray/config.json 不存在(见 README:cp deploy/xray/config.example.json 并填 privateKey)"
 ! grep -q "REPLACE_WITH_xray_x25519_PRIVATE_KEY" ./xray/config.json \
