@@ -61,7 +61,6 @@ Same URL serves both. Per-node URLs use `Node.PublicHost/PublicPort`, falling ba
 ## File layout shortcuts
 
 - `server/cmd/server/main.go` — wires all services + schedulers + router (~90 lines, read it first when adding cross-cutting features)
-- `server/cmd/agent/main.go` — node-side daemon, gopsutil + heartbeat POST. Built separately, runs on each node VPS
 - `server/internal/api/router.go` — all routes registered here, including which group has which middleware
 - `server/internal/xray/{client,user,stats,outbound}.go` — wrappers around xray-core's `HandlerService` / `StatsService` gRPC. **Xray v26 changed proto schemas**: `socks.ClientConfig.Server` is `*ServerEndpoint` (single, not slice), `ClientConfig.Version` is gone (always SOCKS5). Easy to get wrong.
 - `web/src/components/ui/*` — hand-written shadcn primitives, not from CLI. Match the shadcn pattern but live in-tree.

@@ -45,7 +45,6 @@ echo "==> 停止本地进程"
 kill_pidfile "Go 后端"   .pids/server.pid
 kill_pidfile "React 前端" .pids/web.pid
 kill_pidfile "docker 日志" .pids/docker-logs.pid
-kill_pidfile "本地 agent" .pids/agent.pid
 
 kill_by_port 8891 "Go 后端"
 kill_by_port 8890 "React 前端"
