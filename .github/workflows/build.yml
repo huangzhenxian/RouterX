@@ -1,7 +1,7 @@
 name: Build and push image to ACR
 
 # 简化发布:推到 main/master 或打任意 tag,都构建并推 single-channel 的 latest。
-# 镜像:registry.cn-hongkong.aliyuncs.com/mewtwo_zero/routex:latest
+# 单镜像全栈:registry.cn-hongkong.aliyuncs.com/mewtwo_zero/routex:latest
 on:
   push:
     branches: [main, master]
